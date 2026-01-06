@@ -1,3 +1,5 @@
+# MultyWorkemon
+
 ## Promt
 
 Напиши на python решение состоящее из совокупности statless микросервисов упакованных в docker контейнеры. каждый из микросервисов реализует лоирование в kibana и healthcheck в графану.
@@ -153,7 +155,7 @@ components:
     get:
       summary: Определение контекста обращения
       description: |
-        Определение контекста обращения на основе текста обращения и атрибутов обративщегося пользователя
+        Определение контекста обращения на основе текста обращения и атрибутов обратившегося пользователя
       parameters:
         - name: username
           in: query
@@ -259,7 +261,7 @@ paths:
           required: true
           schema:
             type: string
-          example: "Младший системный аналитик из клиентского департамента хочет сформировать срезы по авторизационным операциям кошельков, это домен b2c."
+            example: "Младший системный аналитик из клиентского департамента хочет сформировать срезы по авторизационным операциям кошельков, это домен b2c."
         - name: request
           in: query
           description: Текст обращения пользователя
@@ -323,6 +325,33 @@ components:
         error: "Bad Request"
         message: "Requiered paremeter is missing"
         statusCode: 400
- 
-
   
+
+## Setup Instructions
+
+1. Ensure Docker and Docker Compose are installed.
+
+2. Clone or navigate to the project directory.
+
+3. For each service, update the `.env` files with actual credentials:
+   - `services/ai-secretary/.env`: Set DATABASE_URL to your PostgreSQL connection string.
+   - `services/ai-guesser/.env`: Set LLM_API_KEY and other LLM settings.
+   - `services/ai-systemanalitic/.env`: Same as ai-guesser.
+   - `services/ai-communicator/.env`: Set YANDEX_EMAIL, YANDEX_PASSWORD, TELEGRAM_BOT_TOKEN.
+
+4. Build and run the services using Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+
+5. Services will be available on:
+   - AI-Secretary: http://localhost:8000
+   - AI-Guesser: http://localhost:8001
+   - AI-SystemAnalitic: http://localhost:8002
+   - AI-Communicator: http://localhost:8003
+
+6. For logging to Kibana, ensure logs are forwarded to Elasticsearch (e.g., via Filebeat).
+
+7. For healthchecks in Grafana, configure Prometheus to scrape the /health endpoints and Grafana to visualize.
+
+See `examples.md` for API usage examples.
