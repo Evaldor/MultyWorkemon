@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: multyworkemon
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ai-secretary:
+    build: ./services/ai-secretary
+    env_file: ./services/ai-secretary/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - ai-guesser
+      - ai-systemanalitic
+
+  ai-guesser:
+    build: ./services/ai-guesser
+    env_file: ./services/ai-guesser/.env
+    ports:
+      - "8001:8001"
+
+  ai-systemanalitic:
+    build: ./services/ai-systemanalitic
+    env_file: ./services/ai-systemanalitic/.env
+    ports:
+      - "8002:8002"
+
+  ai-communicator:
+    build: ./services/ai-communicator
+    env_file: ./services/ai-communicator/.env
+    ports:
+      - "8003:8003"
+    depends_on:
+      - ai-secretary
+
+volumes:
+  postgres_data:
