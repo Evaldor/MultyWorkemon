@@ -1,5 +1,6 @@
 import logging_config  # Must be first
 import logging
+import json
 from fastapi import FastAPI, HTTPException, Query
 from config import LLM_API_KEY, LLM_ENDPOINT, LLM_MODEL
 import requests
@@ -8,7 +9,20 @@ app = FastAPI(title="AI-SystemAnalitic API", version="1.0.0")
 
 logger = logging.getLogger(__name__)
 
-SAVED_PROMPT = "Ты инденер данных в финтехе, посоветуй в каких компонентах истемы надо сделать операции и какие, для того чтобы дать польователю то что он хочет?"
+SAVED_PROMPT = """
+    Ты инженер данных в финтехе, посоветуй в каких компонентах стемы надо 
+    сделать операции и какие, для того чтобы дать пользователю то что он хочет?
+    Если информации достаточно - верни is_enough - true а в атрибут reasoning запиши 
+    список действий и мест для их выполнения, ссылок на документацию или репозитории которые 
+    для этого понадобятся
+    Если информации не достаточно или нет уверенности в конкретном запросе  верни is_enough - true 
+    а в атрибут reasoning сформулируй уточняюащий вопрос с объяснением почему ты его задаешь.
+    Верни ответ строго в json формате:
+    {
+        "is_enough": boolean,
+        "reasoning": string
+    }
+    """
 
 @app.get("/prepare-analititcs")
 async def prepare_analitics(
@@ -37,9 +51,17 @@ async def prepare_analitics(
         logger.error("Unexpected LLM response format", extra={"response": llm_data})
         raise HTTPException(status_code=500, detail="Internal server error")
     
+    try:
+        parsed = json.loads(llm_response)
+        is_enough = parsed["is_enough"]
+        reasoning = parsed["reasoning"]
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error("Failed to parse LLM response", extra={"error": str(e), "response": llm_response})
+        raise HTTPException(status_code=500, detail="Internal server error")
+
     result = {
-        "is_enough": True,  # As per spec, always true for this service
-        "response": llm_response
+        "is_enough": is_enough,
+        "reasoning": reasoning
     }
     logger.info("Analytics prepared", extra=result)
     return result
