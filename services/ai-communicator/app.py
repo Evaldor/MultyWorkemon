@@ -5,6 +5,7 @@ from config import YANDEX_IMAP_HOST, YANDEX_EMAIL, YANDEX_PASSWORD, TELEGRAM_BOT
 import requests
 import time
 import threading
+import asyncio
 import imapclient
 import email
 from telegram import Bot
@@ -56,18 +57,19 @@ def poll_emails():
             logger.error("Error polling emails", extra={"error": str(e)})
         time.sleep(60)  # Poll every minute
 
-def poll_telegram():
+async def poll_telegram():
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
+    await bot.delete_webhook()
     last_update_id = 0
     while True:
         try:
-            updates = bot.get_updates(offset=last_update_id + 1, timeout=30)
+            updates = await bot.get_updates(offset=last_update_id + 1, timeout=30)
             for update in updates:
                 if update.message and update.message.text:
                     chat_id = update.message.chat.id
                     username = update.message.from_user.username or str(update.message.from_user.id)
                     request_text = update.message.text
-                    
+
                     params = {
                         "channel": "tg",
                         "username": username,
@@ -80,18 +82,18 @@ def poll_telegram():
                         logger.info("Processed TG message", extra={"chat_id": chat_id, "username": username})
                     else:
                         logger.error("Failed to process TG message", extra={"chat_id": chat_id, "status": response.status_code})
-                
+
                 last_update_id = update.update_id
         except TelegramError as e:
             logger.error("Telegram error", extra={"error": str(e)})
         except Exception as e:
             logger.error("Error polling Telegram", extra={"error": str(e)})
-        time.sleep(10)  # Poll every 10 seconds
+        await asyncio.sleep(10)  # Poll every 10 seconds
 
 @app.on_event("startup")
 async def startup_event():
-    threading.Thread(target=poll_emails, daemon=True).start()
-    threading.Thread(target=poll_telegram, daemon=True).start()
+    #threading.Thread(target=poll_emails, daemon=True).start()
+    threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
     logger.info("Started polling threads")
 
 @app.get("/health")
