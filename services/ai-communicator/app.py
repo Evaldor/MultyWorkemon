@@ -42,8 +42,8 @@ def poll_emails():
                         "channel": "email",
                         "username": username,
                         "request": request_text,
-                        "userdepartment": "unknown",  # Placeholder
-                        "userposition": "unknown"
+                        "department": "unknown",  # Placeholder
+                        "position": "unknown"
                     }
                     response = requests.get(f"{AI_SECRETARY_URL}/analyze-request", params=params)
                     if response.status_code == 200:
@@ -72,8 +72,8 @@ def poll_telegram():
                         "channel": "tg",
                         "username": username,
                         "request": request_text,
-                        "userdepartment": "unknown",
-                        "userposition": "unknown"
+                        "department": "unknown",
+                        "position": "unknown"
                     }
                     response = requests.get(f"{AI_SECRETARY_URL}/analyze-request", params=params)
                     if response.status_code == 200:

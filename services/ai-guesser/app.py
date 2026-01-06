@@ -1,5 +1,6 @@
 import logging_config  # Must be first
 import logging
+import json
 from fastapi import FastAPI, HTTPException, Query
 from config import LLM_API_KEY, LLM_ENDPOINT, LLM_MODEL
 import requests
@@ -8,12 +9,24 @@ app = FastAPI(title="AI-Guesser API", version="1.0.0")
 
 logger = logging.getLogger(__name__)
 
-SAVED_PROMPT = "Ты системный аналитик в финтехе, определи запрос пользователя достаточне для того чтобы понять в какой предметной области находится то что ему интересно?"
+SAVED_PROMPT = """
+    Ты системный аналитик в финтехе, определи запрос пользователя достаточен 
+    для того чтобы понять в какой предметной области находится то что требуется сделать чтобы 
+    удовлетворить его запрос?
+    Если информации достаточно - верни is_enough - true а в атрибут reasoning запиши определение предметной области
+    Если информации не достаточно или нет уверенности в конкретном запросе  верни is_enough - true а в атрибут reasoning 
+    сформулируй уточняюащий вопрос с объяснением почему ты его задаешь.
+    Верни ответ строго в json формате:
+    {
+        "is_enough": boolean,
+        "reasoning": string
+    }
+    """
 
 @app.get("/get-context")
 async def get_context(
     username: str = Query(...),
-    department: str = Query(...),  # Note: in spec it's department: userdepartment, but name is department
+    department: str = Query(...),
     position: str = Query(...),
     request: str = Query(...)
 ):
@@ -38,13 +51,18 @@ async def get_context(
     except KeyError:
         logger.error("Unexpected LLM response format", extra={"response": llm_data})
         raise HTTPException(status_code=500, detail="Internal server error")
-    
-    # For simplicity, assume if "достаточно" in response, is_enough True, else False
-    is_enough = "достаточно" in llm_response.lower()
-    
+
+    try:
+        parsed = json.loads(llm_response)
+        is_enough = parsed["is_enough"]
+        reasoning = parsed["reasoning"]
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error("Failed to parse LLM response", extra={"error": str(e), "response": llm_response})
+        raise HTTPException(status_code=500, detail="Internal server error")
+
     result = {
         "is_enough": is_enough,
-        "response": llm_response
+        "reasoning": reasoning
     }
     logger.info("Context determined", extra=result)
     return result

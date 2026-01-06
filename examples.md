@@ -4,7 +4,7 @@
 
 ### Analyze Request
 ```bash
-curl "http://localhost:8000/analyze-request?channel=email&username=smirnovanton&request=Я хочу получать аналитику о операциях наших кошельков&userdepartment=Департамент клиентского сервиса&userposition=младший аналитик"
+curl "http://localhost:8000/analyze-request?channel=email&username=smirnovanton&request=Я хочу получать аналитику о операциях наших кошельков&department=Департамент клиентского сервиса&position=младший аналитик"
 ```
 
 ### Health Check

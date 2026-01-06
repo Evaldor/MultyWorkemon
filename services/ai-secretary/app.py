@@ -22,8 +22,8 @@ async def analyze_request(
     channel: str = Query(..., enum=["email", "tg", "direct"]),
     username: str = Query(...),
     request: str = Query(...),
-    userdepartment: str = Query(...),
-    userposition: str = Query(...)
+    department: str = Query(...),
+    position: str = Query(...)
 ):
     logger.info("Received analyze-request", extra={"channel": channel, "username": username, "request": request})
     
@@ -37,8 +37,8 @@ async def analyze_request(
     # Call AI-Guesser
     guesser_params = {
         "username": username,
-        "department": userdepartment or "",
-        "position": userposition or "",
+        "department": department or "",
+        "position": position or "",
         "request": request
     }
     try:

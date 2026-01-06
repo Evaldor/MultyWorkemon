@@ -164,14 +164,14 @@ components:
           schema:
             type: string
           example: "smirnovanton"
-        - department: userdepartment
+        - department: department
           in: query
           description: организационная единица к которой пренадлежит пользователь
           required: true
           schema:
             type: string
           example: "Департамент клиентского сервиса"
-        - position: userposition
+        - position: position
           in: query
           description: должность пользователя
           required: true
@@ -355,3 +355,130 @@ components:
 7. For healthchecks in Grafana, configure Prometheus to scrape the /health endpoints and Grafana to visualize.
 
 See `examples.md` for API usage examples.
+
+## Local Development Setup
+
+For running each service locally without Docker, follow these instructions for each service. Ensure Python 3.9+ is installed, and set up virtual environments for each service to avoid dependency conflicts.
+
+### Prerequisites
+- Python 3.9 or higher
+- pip (Python package installer)
+- For AI-Secretary: PostgreSQL database (or SQLite for local testing)
+
+### AI-Secretary (Port 8000)
+
+1. Navigate to the service directory:
+   ```bash
+   cd services/ai-secretary
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate  # On Windows
+   # source venv/bin/activate  # On Linux/Mac
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Update `.env` file with your configuration (database URL, etc.).
+
+5. Run the service:
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+6. Health check: `curl http://localhost:8000/health`
+
+### AI-Guesser (Port 8001)
+
+1. Navigate to the service directory:
+   ```bash
+   cd services/ai-guesser
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate  # On Windows
+   # source venv/bin/activate  # On Linux/Mac
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Update `.env` file with LLM API key and endpoint.
+
+5. Run the service:
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8001 --reload
+   ```
+
+6. Health check: `curl http://localhost:8001/health`
+
+### AI-SystemAnalitic (Port 8002)
+
+1. Navigate to the service directory:
+   ```bash
+   cd services/ai-systemanalitic
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate  # On Windows
+   # source venv/bin/activate  # On Linux/Mac
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Update `.env` file with LLM API key and endpoint.
+
+5. Run the service:
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8002 --reload
+   ```
+
+6. Health check: `curl http://localhost:8002/health`
+
+### AI-Communicator (Port 8003)
+
+1. Navigate to the service directory:
+   ```bash
+   cd services/ai-communicator
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate  # On Windows
+   # source venv/bin/activate  # On Linux/Mac
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Update `.env` file with Yandex IMAP credentials, Telegram bot token, and AI-Secretary URL.
+
+5. Run the service:
+   ```bash
+   uvicorn app:app --host 0.0.0.0 --port 8003 --reload
+   ```
+
+6. Health check: `curl http://localhost:8003/health`
+
+### Notes
+- Use `--reload` for development to automatically restart on code changes.
+- Ensure all services are running and accessible by others (e.g., AI-Communicator needs AI-Secretary).
+- For AI-Secretary, if using SQLite for local development, set `DATABASE_URL=sqlite:///./test.db` in `.env`.
+- Deactivate virtual environments with `deactivate` when done.
