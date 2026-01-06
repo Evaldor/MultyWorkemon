@@ -117,7 +117,7 @@ async def poll_telegram():
 @app.on_event("startup")
 async def startup_event():
     threading.Thread(target=poll_emails, daemon=True).start()
-    #threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
+    threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
     logger.info("Started polling threads")
 
 @app.get("/health")
