@@ -1,15 +1,28 @@
 import logging_config  # Must be first
 import logging
 from fastapi import FastAPI
-from config import YANDEX_IMAP_HOST, YANDEX_EMAIL, YANDEX_PASSWORD, TELEGRAM_BOT_TOKEN, AI_SECRETARY_URL
+from config import YANDEX_IMAP_HOST, YANDEX_SMTP_HOST, YANDEX_EMAIL, YANDEX_PASSWORD, TELEGRAM_BOT_TOKEN, AI_SECRETARY_URL
 import requests
 import time
 import threading
 import asyncio
 import imapclient
 import email
+import email.utils
+import ssl
+import smtplib
+from email.mime.text import MIMEText
 from telegram import Bot
 from telegram.error import TelegramError
+
+def send_email_reply(to_email, subject, body):
+    msg = MIMEText(body)
+    msg['Subject'] = f"Re: {subject}"
+    msg['From'] = YANDEX_EMAIL
+    msg['To'] = to_email
+    with smtplib.SMTP_SSL(YANDEX_SMTP_HOST, 465) as server:
+        server.login(YANDEX_EMAIL, YANDEX_PASSWORD)
+        server.sendmail(YANDEX_EMAIL, to_email, msg.as_string())
 
 app = FastAPI(title="AI-Communicator", version="1.0.0")
 
@@ -18,7 +31,10 @@ logger = logging.getLogger(__name__)
 def poll_emails():
     while True:
         try:
-            with imapclient.IMAPClient(YANDEX_IMAP_HOST, ssl=True) as client:
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            with imapclient.IMAPClient(YANDEX_IMAP_HOST, ssl_context=ssl_context) as client:
                 client.login(YANDEX_EMAIL, YANDEX_PASSWORD)
                 client.select_folder('INBOX')
                 messages = client.search(['UNSEEN'])
@@ -48,6 +64,10 @@ def poll_emails():
                     }
                     response = requests.get(f"{AI_SECRETARY_URL}/analyze-request", params=params)
                     if response.status_code == 200:
+                        response_data = response.json()
+                        reply_text = response_data.get("response") or response_data.get("question", "No response")
+                        _, to_email = email.utils.parseaddr(sender)
+                        send_email_reply(to_email, subject, reply_text)
                         logger.info("Processed email", extra={"msgid": msgid, "sender": sender})
                     else:
                         logger.error("Failed to process email", extra={"msgid": msgid, "status": response.status_code})
@@ -96,8 +116,8 @@ async def poll_telegram():
 
 @app.on_event("startup")
 async def startup_event():
-    #threading.Thread(target=poll_emails, daemon=True).start()
-    threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
+    threading.Thread(target=poll_emails, daemon=True).start()
+    #threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
     logger.info("Started polling threads")
 
 @app.get("/health")
