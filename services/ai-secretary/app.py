@@ -52,7 +52,7 @@ async def analyze_request(
     if context_data.get("is_enough"):
         # Call AI-SystemAnalitic
         analitic_params = {
-            "preparedcontext": context_data["response"],
+            "preparedcontext": context_data["reasoning"],
             "request": request
         }
         try:
@@ -63,13 +63,13 @@ async def analyze_request(
             logger.error("Error calling AI-SystemAnalitic", extra={"error": str(e)})
             raise HTTPException(status_code=500, detail="Internal server error")
         
-        final_response = analitic_data["response"]
+        final_response = analitic_data["reasoning"]
         action = "ответить сообщением"  # Assuming based on context
         question = ""
     else:
-        final_response = context_data["response"]
+        final_response = ""
         action = "уточнить"
-        question = context_data["response"]
+        question = context_data["reasoning"]
     
     # Update history with response
     history.response = final_response
