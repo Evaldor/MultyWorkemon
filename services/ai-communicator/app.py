@@ -80,8 +80,12 @@ async def poll_telegram():
                     response = requests.get(f"{AI_SECRETARY_URL}/analyze-request", params=params)
                     if response.status_code == 200:
                         logger.info("Processed TG message", extra={"chat_id": chat_id, "username": username})
+                        response_data = response.json()
+                        message_text = response_data.get("response") or response_data.get("question", "No response")
+                        await bot.send_message(chat_id=chat_id, text=message_text)
                     else:
                         logger.error("Failed to process TG message", extra={"chat_id": chat_id, "status": response.status_code})
+                        await bot.send_message(chat_id=chat_id, text="Failed to process your request.")
 
                 last_update_id = update.update_id
         except TelegramError as e:
