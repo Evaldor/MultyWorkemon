@@ -340,7 +340,7 @@ components:
    - `services/ai-secretary/.env`: Set DATABASE_URL to your PostgreSQL connection string.
    - `services/ai-guesser/.env`: Set LLM_API_KEY and other LLM settings.
    - `services/ai-systemanalitic/.env`: Same as ai-guesser.
-   - `services/ai-communicator/.env`: Set YANDEX_EMAIL, YANDEX_PASSWORD, TELEGRAM_BOT_TOKEN.
+   - `services/ai-communicator/.env`: Set EMAIL, PASSWORD, TELEGRAM_BOT_TOKEN.
 
 4. Build and run the services using Docker Compose:
    ```bash

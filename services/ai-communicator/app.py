@@ -1,7 +1,7 @@
 import logging_config  # Must be first
 import logging
 from fastapi import FastAPI
-from config import YANDEX_IMAP_HOST, YANDEX_SMTP_HOST, YANDEX_EMAIL, YANDEX_PASSWORD, TELEGRAM_BOT_TOKEN, AI_SECRETARY_URL
+from config import EMAIL_IS_ENABLED, IMAP_HOST, SMTP_HOST, EMAIL, PASSWORD, TELEGRAM_IS_ENABLED, TELEGRAM_BOT_TOKEN, AI_SECRETARY_URL
 import requests
 import time
 import threading
@@ -18,11 +18,11 @@ from telegram.error import TelegramError
 def send_email_reply(to_email, subject, body):
     msg = MIMEText(body)
     msg['Subject'] = f"Re: {subject}"
-    msg['From'] = YANDEX_EMAIL
+    msg['From'] = EMAIL
     msg['To'] = to_email
-    with smtplib.SMTP_SSL(YANDEX_SMTP_HOST, 465) as server:
-        server.login(YANDEX_EMAIL, YANDEX_PASSWORD)
-        server.sendmail(YANDEX_EMAIL, to_email, msg.as_string())
+    with smtplib.SMTP_SSL(SMTP_HOST, 465) as server:
+        server.login(EMAIL, PASSWORD)
+        server.sendmail(EMAIL, to_email, msg.as_string())
 
 app = FastAPI(title="AI-Communicator", version="1.0.0")
 
@@ -34,8 +34,8 @@ def poll_emails():
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
-            with imapclient.IMAPClient(YANDEX_IMAP_HOST, ssl_context=ssl_context) as client:
-                client.login(YANDEX_EMAIL, YANDEX_PASSWORD)
+            with imapclient.IMAPClient(IMAP_HOST, ssl_context=ssl_context) as client:
+                client.login(EMAIL, PASSWORD)
                 client.select_folder('INBOX')
                 messages = client.search(['UNSEEN'])
                 for msgid in messages:
@@ -116,8 +116,10 @@ async def poll_telegram():
 
 @app.on_event("startup")
 async def startup_event():
-    threading.Thread(target=poll_emails, daemon=True).start()
-    threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
+    if TELEGRAM_IS_ENABLED:
+        threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
+    if EMAIL_IS_ENABLED:
+        threading.Thread(target=poll_emails, daemon=True).start()
     logger.info("Started polling threads")
 
 @app.get("/health")
