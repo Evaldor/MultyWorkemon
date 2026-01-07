@@ -21,9 +21,7 @@ logger = logging.getLogger(__name__)
 async def analyze_request(
     channel: str = Query(..., enum=["email", "tg", "direct"]),
     username: str = Query(...),
-    request: str = Query(...),
-    department: str = Query(...),
-    position: str = Query(...)
+    request: str = Query(...)
 ):
     logger.info("Received analyze-request", extra={"channel": channel, "username": username, "request": request})
     
@@ -34,6 +32,14 @@ async def analyze_request(
     db.commit()
     db.refresh(history)
     
+    # Get department and position placeholder TODO
+    if channel == "email":
+        department = "b2c"
+        position = "Менеджер команды карточных продуктов"
+    elif channel == "tg":
+        department = "Департамент аналитики данных"
+        position = "младший аналитик"
+
     # Call AI-Guesser
     guesser_params = {
         "username": username,
