@@ -91,9 +91,7 @@ async def poll_telegram():
                     params = {
                         "channel": "tg",
                         "username": username,
-                        "request": request_text,
-                        "department": "unknown",
-                        "position": "unknown"
+                        "request": request_text
                     }
                     response = requests.get(f"{AI_SECRETARY_URL}/analyze-request", params=params)
                     if response.status_code == 200:
