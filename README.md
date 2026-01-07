@@ -107,13 +107,10 @@ components:
           type: string
           description: Требуемое действие
           enum:
-            - уточнить
-            - ответить сообщением
-            - создать jira-task
-            - написать в telegram сотруднику
-            - ответить на письмо
-            - написать в рассылку департамента
-          example: уточнить
+            - clarify
+            - reply with a telegram message
+            - reply to an email
+          example: clarify
         question:
           type: string
           description: Уточняющий вопрос, если он есть

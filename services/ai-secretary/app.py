@@ -70,15 +70,16 @@ async def analyze_request(
             raise HTTPException(status_code=500, detail="Internal server error")
         
         final_response = analitic_data["reasoning"]
-        action = "ответить сообщением"  # Assuming based on context
+        action = analitic_data["action"]
         question = ""
     else:
         final_response = ""
-        action = "уточнить"
+        action = "clarify"
         question = context_data["reasoning"]
     
     # Update history with response
-    history.response = final_response
+    history.response = final_response or question
+    history.action = action
     db.commit()
     db.close()
     

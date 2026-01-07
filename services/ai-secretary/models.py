@@ -12,4 +12,5 @@ class RequestHistory(Base):
     username = Column(String, nullable=False)
     request_text = Column(Text, nullable=False)
     response = Column(Text, nullable=True)
+    action = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
