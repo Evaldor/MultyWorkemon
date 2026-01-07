@@ -12,6 +12,9 @@ No specific credentials yet, use placeholders; saved prompt is hard-coded in cod
 
 ## Список сервисов
 
+
+![Схема взаимодействия](https://github.com/Evaldor/MultyWorkemon/raw/main/microservice.jpg)
+
 ### AI-communicator
 
 Отвечает за коммуникацию с пользователями. Сервис проверяет новые письма почтовом ящике yandex, сообщения полученные через месенджер telegarm и отпраляет их в качестве запроса в метод analyze-request API AI-Secretary. 
