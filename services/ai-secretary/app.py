@@ -69,14 +69,24 @@ async def analyze_request(
             logger.error("Error calling AI-SystemAnalitic", extra={"error": str(e)})
             raise HTTPException(status_code=500, detail="Internal server error")
         
-        final_response = analitic_data["reasoning"]
+        investigative_reasoning = analitic_data["investigative_reasoning"]
         action = analitic_data["action"]
+        determinate_action_reasoning = analitic_data["determinate_action_reasoning"]
+
         question = ""
+
+        if action == 'develop':
+            action_word = "разработать"
+        elif action == 'consult':
+            action_word = "консультировать"
+        elif action == 'escalate':
+            action_word = "эскалировать"
+
+        final_response = f"{investigative_reasoning} поэтому необходимо: {action_word }, Так как: {determinate_action_reasoning}"
     else:
         final_response = ""
         action = "clarify"
         question = context_data["reasoning"]
-    
     # Update history with response
     history.response = final_response or question
     history.action = action
@@ -87,7 +97,7 @@ async def analyze_request(
         "is_enough": context_data.get("is_enough", False),
         "request": request,
         "action": action,
-        "question": question,
+        "question": question or "",
         "response": final_response
     }
     logger.info("Analysis complete", extra=result)
