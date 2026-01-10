@@ -28,6 +28,20 @@ app = FastAPI(title="AI-Communicator", version="1.0.0")
 
 logger = logging.getLogger(__name__)
 
+def split_message(text, max_length=4096):
+    """Split a long message into chunks of max_length."""
+    messages = []
+    while len(text) > max_length:
+        # Find the last space before max_length to avoid cutting words
+        cut_point = text.rfind(' ', 0, max_length)
+        if cut_point == -1:
+            cut_point = max_length
+        messages.append(text[:cut_point])
+        text = text[cut_point:].strip()
+    if text:
+        messages.append(text)
+    return messages
+
 def poll_emails():
     while True:
         try:
@@ -77,7 +91,10 @@ def poll_emails():
 
 async def poll_telegram():
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
-    await bot.delete_webhook()
+    try:
+        await bot.delete_webhook()
+    except Exception as e:
+        logger.error("Failed to delete webhook", extra={"error": str(e)})
     last_update_id = 0
     while True:
         try:
@@ -98,7 +115,10 @@ async def poll_telegram():
                         logger.info("Processed TG message", extra={"chat_id": chat_id, "username": username})
                         response_data = response.json()
                         message_text = response_data.get("response") or response_data.get("question", "No response")
-                        await bot.send_message(chat_id=chat_id, text=message_text)
+                        logger.info("Message text length", extra={"length": len(message_text)})
+                        messages = split_message(message_text)
+                        for msg in messages:
+                            await bot.send_message(chat_id=chat_id, text=msg)
                     else:
                         logger.error("Failed to process TG message", extra={"chat_id": chat_id, "status": response.status_code})
                         await bot.send_message(chat_id=chat_id, text="Failed to process your request.")
@@ -112,9 +132,9 @@ async def poll_telegram():
 
 @app.on_event("startup")
 async def startup_event():
-    if TELEGRAM_IS_ENABLED:
+    if TELEGRAM_IS_ENABLED=='true':
         threading.Thread(target=lambda: asyncio.run(poll_telegram()), daemon=True).start()
-    if EMAIL_IS_ENABLED:
+    if EMAIL_IS_ENABLED=='true':
         threading.Thread(target=poll_emails, daemon=True).start()
     logger.info("Started polling threads")
 
